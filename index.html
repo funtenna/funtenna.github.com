@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Funtenna</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link rel="stylesheet" href="css/normalize.min.css">
+        <link rel="stylesheet" href="css/main.css">
+
+        <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+    </head>
+    <body>
+
+        <div class="header-container">
+            <header class="wrapper clearfix">
+                <h1 class="title">Funtenna</h1>
+            </header>
+        </div>
+<div class="main-container">
+            <div class="main wrapper clearfix">
+
+                <article>
+                    <header>
+                        <h1>Funtenna</h1>
+                        <blockquote>
+                            <b>funtenna (n.)</b>
+                            <ol>
+                                <li>improvised digital software-based RF transmitter, commandeering existing hardware
+                                not intended for radio use</li>
+                            </ol>
+                        </blockquote>
+                        <p>The funtenna is a technique to exfiltrate data over radio on a compromised device in
+                        software.</p>
+
+                        <p>The purpose of this website is to encourage the development of funtenna exploits and to
+                        aggregate information about vulnerable devices and strategies for successful funtenna
+                        attacks.</p>
+                    </header>
+                    <section>
+                        <h2>Background</h2>
+                        <p>During World War II, scientists from Bell Labs discovered the electromagnetic side channel
+                        attack, recovering plain text from a Signal Corps cryptocenter. The US military developed
+                        policies intended to prevent attacks of this class; there is evidence that the Soviet Union knew
+                        of these attacks as early as 1951. The US government began to develop a standard called TEMPEST
+                        in the late 1950s <a href="#cite-boak">[1]</a>. Van Eck discovered an attack (so-called "Van Eck
+                        phreaking") which used an ordinary television set to recover information from a CRT
+                        monitor <a href="#cite-van-eck">[2]</a>; declassified documents suggest that the NSA had been
+                        aware of the EM risk from CRT displays for at least four years before Van Eck published his
+                        results <a href="#cite-nsa">[3]</a>.</p>
+
+                        <p>In a 1983 operation called Project GUNMAN, the NSA discovered bugs that had been planted in
+                        typewriters in the US embassy in Moscow nearly 10 years prior. These bugs used RF to exfiltrate
+                        data about the information typed to the Soviets <a href="#cite-maneki">[4]</a>.</p>
+
+                        <p>In 2012, members of the Imperial College Robotics Society at Imperial College London used
+                        Raspberry Pi hardware meant to generate clock signals on GPIO pins to transmit FM radio
+                        <a href="#cite-pifm">[5]</a>.</p>
+
+                        <p>The funtenna is a combination of all of these ideas: it uses electromagnetic radiation as a
+                        data exfiltration medium (GUNMAN) on equipment that gives off EM radiation as a side effect
+                        (TEMPEST/Van Eck) controlled in software (PiFM).</p>
+                    </section>
+                    <section>
+                        <h2>How it Works</h2>
+                        <p>A funtenna must be able to generate a radio signal in software and modulate that signal in
+                        order to encode data. Then, a receiver must be able to reverse the process in order to recover
+                        the encoded data.</p>
+
+                        <h3>Generating a Signal</h3>
+                        <h4>GPIO</h4>
+                        <p>This is the method that inspired the Funtenna. It involves hijacking GPIO (which includes
+                        switches, lights, and other fun hardware). We used this for our BeagleBone proof-of-concept.
+                        Most of the time, will have to be modulated by the CPU (which increases detection risk).</p>
+
+                        <h4>UART</h4>
+                        <p>UART hardware can take care of modulation itself, which reduces CPU load and allows for more
+                        precise control over frequency.</p>
+
+                        <h3>Modulating the Signal</h3>
+                        <h4>On-Off Keying</h4>
+                        <p>This is the simplest possible method of modulation. It sends a signal to represent a 1, or no
+                        signal to represent a 0. Very easy to implement, but not the fastest or most reliable.<p>
+
+                        <h4>Frequency-Shift Keying</h4>
+                        <p>Send one frequency to represent a 1, and another for a 0 (this can be generalized to include
+                        more symbols). It is a little trickier to implement, but can send data faster (and can
+                        distinguish between not transmitting and transmitting a 0.</p>
+
+                        <h3>Receiving the Signal</h3>
+                        <h4>USRP</h4>
+                        <p>We used a USRP2 (discontinued) tuned to the target frequency to receive the signal. The USRP
+                        integrates well with GNU Radio.</p>
+
+                        <h4>Antenna</h4>
+                        <p>For the first proof-of-concept, we just used a long spool of wire. Eventually, we moved on to
+                        improvised antennas (wire wrapped around wooden sticks) and finally a legitimate antenna (from
+                        Pixel Technologies). Better antennas give better range.</p>
+
+                        <h3>Demodulating the Signal</h3>
+                        <h4>GNU Radio</h4>
+                        <p>We encoded data using a Hamming(7,4) code with an extra parity bit and wrote GNU Radio blocks
+                        to decode online. We also used built-in automatic gain control, a band pass filter, and other
+                        useful signal-processing blocks.</p>
+                    </section>
+                    <section>
+                        <h2>Funtennas</h2>
+                        <h3>Reference Implementation</h3>
+
+                        <p>This is the code for the reference implementation. The experimental setup involves</p>
+                        <ul>
+                            <li>a BeagleBone running Ångström Linux,</li>
+                            <li>a USRP2,</li>
+                            <li>a homemade antenna, and</li>
+                            <li>GNU Radio.</li>
+                        </ul>
+                        <p>See the <a href="http://www.github.com/znewman01/ref_design">reference design repository on
+                        GitHub</a> for instructions to reproduce and experimental details.</p>
+
+                        <p>In this implementation, a BeagleBone bit-banging a GPIO pin transmitted text at a distance of
+                        30 feet at 12.5 MHz.</p>
+
+                        <h3>More to Come</h3>
+                    </section>
+                    <footer>
+                        <h2>References</h2>
+                        <ol>
+                            <li id="cite-boak">
+                                <a href="http://cryptome.org/2012/05/nsa-tempest-history.pdf">
+                                    Boak, D. A History of U.S. Communications Security. (1973).
+                                </a>
+                            </li>
+                            <li id="cite-van-eck">
+                                <a href="http://www.sciencedirect.com/science/article/pii/016740488590046X">
+                                    Van Eck, W. Electromagnetic radiation from video display units: An eavesdropping
+                                    risk? <i>Computers &amp; Security</i> <b>4,</b> 269–286 (1985).
+                                </a>
+                            </li>
+                            <li id="cite-nsa">
+                                <a href="http://cryptome.org/jya/nacsim-5000/nacsim-5000.htm">
+                                    National Security Agency. NACSIM 5000 Tempest Fundamentals. (1982).
+                                </a>
+                            </li>
+                            <li id="cite-gunman">
+                                <a href="http://cryptome.org/2012/05/nsa-gunman.pdf">
+                                    Maneki, S. Learning from the Enemy: The GUNMAN Project. (2007).
+                                </a>
+                            </li>
+                            <li id="cite-pifm">
+                                <a href="http://www.icrobotics.co.uk/wiki/index.php/Turning_the_Raspberry_Pi_Into_an_FM_Transmitter">
+                                    Imperial College Robotics Society. Turning the Raspberry Pi Into an FM Transmitter.
+                                    <i>Imperial College Robotics Society</i> (2013).
+                                </a>
+                            </li>
+                        </ol>
+                    </footer>
+                </article>
+
+                <aside>
+                    <h3>Get Involved</h3>
+                    <i>Contribute to the Funtenna project</i>
+                    <p>
+                        We want funtenna development to be community-driven. All of the code for our reference
+                        implementation is available on <a href="http://www.github.com/funtenna">GitHub</a>. Please find
+                        funtennas in other embedded devices, suggest new exfiltration techniques, or improve our
+                        demodulation.
+                    </p>
+                </aside>
+
+            </div> <!-- #main -->
+        </div> <!-- #main-container -->
+
+        <div class="footer-container">
+            <footer class="wrapper">
+                <h3>footer</h3>
+            </footer>
+        </div>
+
+        <script src="js/main.js"></script>
+    </body>
+</html>
